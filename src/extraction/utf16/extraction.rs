@@ -36,8 +36,10 @@ fn decode_utf16le(bytes: &[u8]) -> Result<(String, Vec<u16>), StringyError> {
 
     // Convert to u16 slice
     let u16_slice: Vec<u16> = even_bytes
-        .chunks_exact(2)
-        .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|chunk| u16::from_le_bytes(*chunk))
         .collect();
 
     // Decode UTF-16 to String
@@ -70,8 +72,10 @@ fn decode_utf16be(bytes: &[u8]) -> Result<(String, Vec<u16>), StringyError> {
 
     // Convert to u16 slice
     let u16_slice: Vec<u16> = even_bytes
-        .chunks_exact(2)
-        .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|chunk| u16::from_be_bytes(*chunk))
         .collect();
 
     // Decode UTF-16 to String

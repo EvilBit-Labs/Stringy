@@ -85,8 +85,10 @@ fn decode_manifest(bytes: &[u8]) -> crate::types::Result<String> {
         Encoding::Utf16Be => {
             // Convert UTF-16BE to UTF-16LE for decoding
             let u16_slice: Vec<u16> = data
-                .chunks_exact(2)
-                .map(|chunk| u16::from_be_bytes([chunk[0], chunk[1]]))
+                .as_chunks::<2>()
+                .0
+                .iter()
+                .map(|chunk| u16::from_be_bytes(*chunk))
                 .collect();
             String::from_utf16(&u16_slice)
                 .map(|s| s.trim_end_matches('\0').to_string())

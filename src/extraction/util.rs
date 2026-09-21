@@ -40,8 +40,10 @@ pub fn decode_utf16le_bytes(bytes: &[u8], trim_nulls: bool) -> Result<String> {
 
     // Convert to u16 slice
     let u16_slice: Vec<u16> = even_bytes
-        .chunks_exact(2)
-        .map(|chunk| u16::from_le_bytes([chunk[0], chunk[1]]))
+        .as_chunks::<2>()
+        .0
+        .iter()
+        .map(|chunk| u16::from_le_bytes(*chunk))
         .collect();
 
     // Decode UTF-16 to String
