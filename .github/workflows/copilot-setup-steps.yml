@@ -11,6 +11,13 @@ on:
     paths:
       - .github/workflows/copilot-setup-steps.yml
 
+# Serialize mise installs. `cargo:*` tools whose prebuilt artifact is missing fall back to
+# `cargo install`, which drives rustup against the runner image's ambient toolchain; running
+# several of those at once corrupts it. These jobs need the full toolset, so they cannot use
+# the per-job `install_args` scoping that ci.yml uses.
+env:
+  MISE_JOBS: 1
+
 jobs:
   # The job MUST be called `copilot-setup-steps` or it will not be picked up by Copilot.
   copilot-setup-steps:
