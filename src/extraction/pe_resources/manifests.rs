@@ -189,3 +189,66 @@ pub fn extract_manifest_strings(data: &[u8]) -> Vec<FoundString> {
 
     strings
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Encode `text` as UTF-16BE bytes prefixed with the UTF-16BE BOM.
+    fn utf16be_with_bom(text: &str) -> Vec<u8> {
+        let mut bytes = vec![0xFE, 0xFF];
+        for unit in text.encode_utf16() {
+            bytes.extend_from_slice(&unit.to_be_bytes());
+        }
+        bytes
+    }
+
+    #[test]
+    fn detects_utf16be_manifest_from_bom() {
+        // Arrange
+        let bytes = utf16be_with_bom("<a/>");
+
+        // Act
+        let encoding = detect_manifest_encoding(&bytes);
+
+        // Assert
+        assert_eq!(encoding, Encoding::Utf16Be);
+    }
+
+    #[test]
+    fn decodes_utf16be_manifest_and_strips_bom() {
+        // Arrange
+        let bytes = utf16be_with_bom("<assembly/>");
+
+        // Act
+        let decoded = decode_manifest(&bytes).expect("UTF-16BE manifest should decode");
+
+        // Assert
+        assert_eq!(decoded, "<assembly/>");
+    }
+
+    #[test]
+    fn trims_trailing_nulls_from_utf16be_manifest() {
+        // Arrange
+        let bytes = utf16be_with_bom("<a/>\u{0}\u{0}");
+
+        // Act
+        let decoded = decode_manifest(&bytes).expect("UTF-16BE manifest should decode");
+
+        // Assert
+        assert_eq!(decoded, "<a/>");
+    }
+
+    #[test]
+    fn ignores_trailing_odd_byte_in_utf16be_manifest() {
+        // Arrange: a stray byte leaves an incomplete final code unit
+        let mut bytes = utf16be_with_bom("<a/>");
+        bytes.push(0x00);
+
+        // Act
+        let decoded = decode_manifest(&bytes).expect("UTF-16BE manifest should decode");
+
+        // Assert
+        assert_eq!(decoded, "<a/>");
+    }
+}
